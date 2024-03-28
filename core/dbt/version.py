@@ -7,9 +7,9 @@ import requests
 
 from typing import Iterator, List, Optional, Tuple
 
-import dbt.common.semver as semver
+import dbt_common.semver as semver
 
-from dbt.common.ui import green, red, yellow
+from dbt_common.ui import green, red, yellow
 
 PYPI_VERSION_URL = "https://pypi.org/pypi/dbt-core/json"
 
@@ -229,5 +229,5 @@ def _get_adapter_plugin_names() -> Iterator[str]:
             yield plugin_name
 
 
-__version__ = "1.8.0a1"
+__version__ = "1.8.0b1"
 installed = get_installed_version()

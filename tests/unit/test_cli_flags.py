@@ -9,8 +9,8 @@ from dbt.cli.flags import Flags
 from dbt.cli.main import cli
 from dbt.cli.types import Command
 from dbt.contracts.project import ProjectFlags
-from dbt.common.exceptions import DbtInternalError
-from dbt.common.helper_types import WarnErrorOptions
+from dbt_common.exceptions import DbtInternalError
+from dbt_common.helper_types import WarnErrorOptions
 from dbt.tests.util import rm_file, write_file
 
 
@@ -104,6 +104,13 @@ class TestFlags:
             run_context.params["send_anonymous_usage_stats"] = set_stats_param
         flags = Flags(run_context)
         assert flags.SEND_ANONYMOUS_USAGE_STATS == expected_anonymous_usage_stats
+
+    def test_resource_types(self, monkeypatch):
+        monkeypatch.setenv("DBT_RESOURCE_TYPES", "model")
+        build_context = self.make_dbt_context("build", ["build"])
+        build_context.params["resource_types"] = ("unit_test",)
+        flags = Flags(build_context)
+        assert flags.resource_types == ("unit_test",)
 
     def test_empty_project_flags_uses_default(self, run_context, project_flags):
         flags = Flags(run_context, project_flags)
@@ -366,6 +373,14 @@ class TestFlags:
 
         assert flags_a.USE_COLORS == flags_b.USE_COLORS
 
+    def test_set_project_only_flags(self, project_flags, run_context):
+        flags = Flags(run_context, project_flags)
+
+        for project_only_flag, project_only_flag_value in project_flags.project_only_flags.items():
+            assert getattr(flags, project_only_flag) == project_only_flag_value
+            # sanity check: ensure project_only_flag is not part of the click context
+            assert project_only_flag not in run_context.params
+
     def _create_flags_from_dict(self, cmd, d):
         write_file("", "profiles.yml")
         result = Flags.from_dict(cmd, d)
@@ -386,10 +401,12 @@ class TestFlags:
         args_dict = {
             "print": True,
             "state": "some/path",
+            "defer_state": None,
         }
         result = self._create_flags_from_dict(Command.BUILD, args_dict)
         assert result.print is True
         assert "some/path" in str(result.state)
+        assert result.defer_state is None
 
     def test_from_dict__seed(self):
         args_dict = {"use_colors": False, "exclude": ["model_three"]}

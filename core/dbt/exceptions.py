@@ -1,10 +1,9 @@
 import json
 import re
 import io
-import agate
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union, TYPE_CHECKING
 
-from dbt.common.exceptions import (
+from dbt_common.exceptions import (
     DbtRuntimeError,
     CompilationError,
     DbtInternalError,
@@ -14,9 +13,13 @@ from dbt.common.exceptions import (
     DbtValidationError,
     CommandResultError,
 )
-from dbt.node_types import NodeType, AccessType
+from dbt.node_types import NodeType, AccessType, REFABLE_NODE_TYPES
 
-from dbt.common.dataclass_schema import ValidationError
+from dbt_common.dataclass_schema import ValidationError
+
+
+if TYPE_CHECKING:
+    import agate
 
 
 class ContractBreakingChangeError(DbtRuntimeError):
@@ -712,6 +715,12 @@ class InvalidAccessTypeError(ParsingError):
         super().__init__(msg=msg)
 
 
+class InvalidUnitTestGivenInput(ParsingError):
+    def __init__(self, input: str) -> None:
+        msg = f"Unit test given inputs must be either a 'ref', 'source' or 'this' call. Got: '{input}'."
+        super().__init__(msg=msg)
+
+
 class SameKeyNestedError(CompilationError):
     def __init__(self) -> None:
         msg = "Test cannot have the same key at the top-level and in config"
@@ -1267,7 +1276,7 @@ class DuplicateResourceNameError(CompilationError):
 
         action = "looking for"
         # duplicate 'ref' targets
-        if node_type in NodeType.refable():
+        if node_type in REFABLE_NODE_TYPES:
             formatted_name = f'ref("{duped_name}")'
         # duplicate sources
         elif node_type == NodeType.Source:
@@ -1343,9 +1352,9 @@ class ContractError(CompilationError):
         self.sql_columns = sql_columns
         super().__init__(msg=self.get_message())
 
-    def get_mismatches(self) -> agate.Table:
+    def get_mismatches(self) -> "agate.Table":
         # avoid a circular import
-        from dbt.common.clients.agate_helper import table_from_data_flat
+        from dbt_common.clients.agate_helper import table_from_data_flat
 
         column_names = ["column_name", "definition_type", "contract_type", "mismatch_reason"]
         # list of mismatches
@@ -1394,7 +1403,7 @@ class ContractError(CompilationError):
                 "This model has an enforced contract, and its 'columns' specification is missing"
             )
 
-        table: agate.Table = self.get_mismatches()
+        table: "agate.Table" = self.get_mismatches()
         # Hack to get Agate table output as string
         output = io.StringIO()
         table.print_table(output=output, max_rows=None, max_column_width=50)  # type: ignore
