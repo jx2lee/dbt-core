@@ -137,6 +137,7 @@ def global_flags(func):
     @p.warn_error
     @p.warn_error_options
     @p.write_json
+    @p.pretty_print_json
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)

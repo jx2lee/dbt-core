@@ -69,6 +69,7 @@ def get_flag_dict():
         "log_path",
         "invocation_command",
         "empty",
+        "pretty_print_json",
     }
     return {key: getattr(GLOBAL_FLAGS, key.upper(), None) for key in flag_attr}
 
