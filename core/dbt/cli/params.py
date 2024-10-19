@@ -716,6 +716,8 @@ show_resource_report = click.option(
 pretty_print_json = click.option(
     "--pretty-print-json/--no-pretty-print-json",
     envvar="DBT_PRETTY_PRINT_JSON",
+    help="""Enable or disable pretty-printing of JSON output. Use --pretty-print-json to format the JSON output for readability, or --no-pretty-print-json for compact JSON.
+    The environment variable DBT_PRETTY_PRINT_JSON can also be used to control this behavior. Defaults to compact output.
+    """,
     default=False,
-    help="If set, format JSON output to be human-readable with proper indentation. Otherwise, output JSON in a compact format.",
 )
